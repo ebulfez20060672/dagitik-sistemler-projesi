@@ -1,32 +1,65 @@
 syntax = "proto3";
 
-package family;
-
 option java_multiple_files = true;
-option java_package = "family";
+package com.hdd; 
+option java_package = "com.hdd.grpc"; 
 option java_outer_classname = "FamilyProto";
 
-message NodeInfo {
-  string host = 1;
-  int32 port = 2;
-}
-
-message FamilyView {
-  repeated NodeInfo members = 1;
-}
-
-message Empty {}
-
-message ChatMessage {
-  string text = 1;
-  string fromHost = 2;
-  int32 fromPort = 3;
-  int64 timestamp = 4;
-}
+import "google/protobuf/empty.proto";
 
 service FamilyService {
-  rpc Join (NodeInfo) returns (FamilyView);
-  rpc GetFamily (Empty) returns (FamilyView);
+  rpc JoinFamily (JoinRequest) returns (JoinResponse);
+  rpc IAmAlive (AliveRequest) returns (AliveResponse);
+  rpc SendChat (ChatMessage) returns (google.protobuf.Empty);
+  
+  // ÖDEV İÇİN GEREKLİ YENİ METODLAR
+  rpc SaveMessage (SaveRequest) returns (SaveResponse);
+  rpc GetMessage (GetRequest) returns (GetResponse);
+}
 
-  rpc ReceiveChat (ChatMessage) returns (Empty);
+// --- Java Kodunun Beklediği Yapı ---
+
+message NodeInfo {
+    string host = 1;    // "ip" yerine "host" yaptık (getHost() çalışsın diye)
+    int32 port = 2;
+    string name = 3;
+}
+
+message ChatMessage {
+    string from_host = 1; // getFromHost() için
+    int32 from_port = 2;  // getFromPort() için
+    string text = 3;      // "message" yerine "text" yaptık (getText() çalışsın diye)
+}
+
+message JoinRequest { 
+    NodeInfo node_info = 1; 
+}
+message JoinResponse { bool success = 1; }
+
+message AliveRequest { NodeInfo node_info = 1; }
+message AliveResponse { bool ack = 1; }
+
+message FamilyView {
+    repeated NodeInfo members = 1;
+}
+
+// --- Yeni İstekler ---
+
+message SaveRequest {
+  string message_id = 1;
+  string content = 2;
+}
+
+message SaveResponse {
+  bool success = 1;
+  string error_message = 2;
+}
+
+message GetRequest {
+  string message_id = 1;
+}
+
+message GetResponse {
+  string content = 1;
+  bool found = 2;
 }
